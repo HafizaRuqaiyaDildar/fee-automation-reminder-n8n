@@ -1,0 +1,440 @@
+{
+  "name": "Fee Submission Automation + PDF receipt + Reminder",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1P6BctxegpfZ-_d2HYuZISDuomncX7Hi_X4Hz5dLDbkA",
+          "mode": "list",
+          "cachedResultName": "Untitled form (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P6BctxegpfZ-_d2HYuZISDuomncX7Hi_X4Hz5dLDbkA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 175989702,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P6BctxegpfZ-_d2HYuZISDuomncX7Hi_X4Hz5dLDbkA/edit#gid=175989702"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        176
+      ],
+      "id": "625e9382-9c5a-4076-99b6-ea5f2a2241df",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "uXfTn8zF6f9wks7K",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json[\"Parent's Email\"] ",
+        "subject": "Fee Received",
+        "emailType": "text",
+        "message": "=Dear Parents, we have received the payment of {{ $('Google Sheets Trigger').item.json[\"Student Name\"] }} (Grade {{ $('Google Sheets Trigger').item.json[\"Grade\"] }}) for the month of {{ $('Google Sheets Trigger').item.json[\"Fee Month\"] }}. Thank you for your cooperation.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        160
+      ],
+      "id": "cd172ee2-a5d9-4ec5-bbde-0121591c6fba",
+      "name": "Send a message",
+      "webhookId": "5a508fef-c9a5-45d3-9bf1-38f50dbf018a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3zKOP90GpD0eE8o9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "13XSTyAu9Ug3F4MHLjmH3weXLFnx2E1C5YZqBZ8LMCnM",
+          "mode": "list",
+          "cachedResultName": "FEE RECEIPT",
+          "cachedResultUrl": "https://docs.google.com/document/d/13XSTyAu9Ug3F4MHLjmH3weXLFnx2E1C5YZqBZ8LMCnM/edit?usp=drivesdk"
+        },
+        "name": "=Receipt {{ $json[\"Student Name\"] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -560,
+        176
+      ],
+      "id": "8430002e-3956-4882-b022-ca24299ab60b",
+      "name": "Copy file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "B757vY9MwWhGr4O1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "=##STUDENT##",
+              "replaceText": "=\n{{ String($('Google Sheets Trigger').item.json[\"Student Name\"]).trim() }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "##GRADE##",
+              "replaceText": "={{ String($('Google Sheets Trigger').item.json[\"Grade\"]) }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "##MONTH##",
+              "replaceText": "={{ String($('Google Sheets Trigger').item.json[\"Fee Month\"]) }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "##DATE##",
+              "replaceText": "={{ String($('Google Sheets Trigger').item.json[\"Timestamp\"]) }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "##AMOUNT##",
+              "replaceText": "={{ String($('Google Sheets Trigger').item.json[\"Amount\"]) }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        80
+      ],
+      "id": "8b68e6c1-99ae-4cb3-9f4d-2df9a1b26273",
+      "name": "Update a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "UwNqGcNWuRSIHtXB",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -240,
+        320
+      ],
+      "id": "80de0313-ac51-4cfe-88a2-6c3b531a15e0",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1P6BctxegpfZ-_d2HYuZISDuomncX7Hi_X4Hz5dLDbkA",
+          "mode": "list",
+          "cachedResultName": "Untitled form (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P6BctxegpfZ-_d2HYuZISDuomncX7Hi_X4Hz5dLDbkA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1465498704,
+          "mode": "list",
+          "cachedResultName": "Students",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P6BctxegpfZ-_d2HYuZISDuomncX7Hi_X4Hz5dLDbkA/edit#gid=1465498704"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "Unpaid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -80,
+        352
+      ],
+      "id": "498b4be6-f15e-458d-aa62-665134c5831d",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5SiLLK6eP70NKDO1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "727828bb-3d39-422a-bb9a-d7c5bf3361c2",
+              "leftValue": "={{ $now.day }}",
+              "rightValue": 7,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        80,
+        464
+      ],
+      "id": "4b4cf9c7-14b1-4612-a5e7-eb8a37f0438d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json[\"Parent's Email\"] }}",
+        "subject": "Fee Reminder",
+        "emailType": "text",
+        "message": "=Dear Parents, this is a friendly reminder that the fee for {{ $json[\"Student Name\"] }} is due by the 10th of this month. Please submit it before then. Thank you.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        304
+      ],
+      "id": "659dcf45-3a14-46b1-a9f4-a6eb445cb447",
+      "name": "Send a message1",
+      "webhookId": "2428c9b0-2c9d-40fa-9b04-51b5409b6307",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3zKOP90GpD0eE8o9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "97ed7896-21fe-466f-be73-2e14715f46fe",
+              "leftValue": "={{ $now.day }}",
+              "rightValue": 11,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "a7480cf0-d644-4f2c-ae25-a62dd58c18f7",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        224,
+        592
+      ],
+      "id": "a3541159-ee16-45a8-b88b-c8fab53676b3",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json[\"Parent's Email\"] }}",
+        "subject": "Fee Overdue",
+        "emailType": "text",
+        "message": "=Dear Parents, the fee for {{ $json[\"Student Name\"] }} was due on the 10th and is now late. Please submit it as soon as possible. Thank you.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        496,
+        528
+      ],
+      "id": "0cd50edf-5301-4be1-98f8-242d9ad00b9c",
+      "name": "Send a message2",
+      "webhookId": "b5535598-be6c-4e6a-bde1-f8434baa823e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3zKOP90GpD0eE8o9",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Copy file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy file": {
+      "main": [
+        [
+          {
+            "node": "Update a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a document": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "09c6f4c3-328c-4b61-a407-df8991cec1b0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8b2d0d033d3dbf2c0ffe088a698dcbcb9ed92e162d400d541bb3ccfc94dc9fb6"
+  },
+  "nodeGroups": [],
+  "id": "W0BUpEK8S6JQSBdX",
+  "tags": []
+}
